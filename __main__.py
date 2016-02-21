@@ -27,9 +27,12 @@ def art_page_get_title(page : spiders.Page):
 
 
 def art_get_image_uri(soup : bs4.BeautifulSoup):
-	download_button, = soup.find_all('a', 'dev-page-download')
+	download_buttons = soup.find_all('a', 'dev-page-download')
 	
-	return download_button['href']
+	if len(download_buttons) != 1:
+		return None
+	
+	return download_buttons[0]['href']
 
 
 def uri_get_ext(uri : str):
@@ -46,8 +49,6 @@ def clean_filename(name):
 def download_user_images(user : str):
 	spider = spiders.Spider(spiders.Requester(caches.Cache(caches.PersistentDict('cache.db'))))
 	domain = '{}.deviantart.com'.format(user)
-	
-	# def download_image(art_uri, image_uri):
 	
 	def process_gallery(page : spiders.Page):
 		for i in iter_uris(page):
@@ -83,27 +84,31 @@ def download_user_images(user : str):
 				
 				soup = bs4.BeautifulSoup(response.content, 'html.parser')
 				image_uri = art_get_image_uri(soup)
-				image_ext = uri_get_ext(image_uri)
-				image_path = os.path.join(dir, file_name + image_ext)
-				temp_path = image_path + '~'
 				
-				util.log('Downloading image: {}', image_path)
-				
-				response = session.get(image_uri)
-				
-				if not response.ok:
-					util.log('Error downloading image: {}', response.status_code)
+				if image_uri is None:
+					util.log('Error: No image URL found on art page.')
 				else:
-					content_type = response.headers['content-type']
+					image_ext = uri_get_ext(image_uri)
+					image_path = os.path.join(dir, file_name + image_ext)
+					temp_path = image_path + '~'
 					
-					if not content_type.startswith('image/'):
-						util.log('Invalid content type for image: {}', content_type)
+					util.log('Downloading image: {}', image_path)
+					
+					response = session.get(image_uri)
+					
+					if not response.ok:
+						util.log('Error downloading image: {}', response.status_code)
 					else:
-						with open(temp_path, 'wb') as file:
-							file.write(response.content)
-							os.fsync(file.fileno())
+						content_type = response.headers['content-type']
 						
-						os.rename(temp_path, image_path)
+						if not content_type.startswith('image/'):
+							util.log('Invalid content type for image: {}', content_type)
+						else:
+							with open(temp_path, 'wb') as file:
+								file.write(response.content)
+								os.fsync(file.fileno())
+							
+							os.rename(temp_path, image_path)
 	
 	spider.enqueue(process_gallery, urllib.parse.urlunparse(('http', domain, '/gallery/', None, urllib.parse.urlencode(dict(catpath = '/')), None)))
 	spider.run()
