@@ -5,6 +5,8 @@ class PersistentDict:
 	def __init__(self, path):
 		self._connection = sqlite3.connect(path)
 		
+		self._connection.execute('PRAGMA busy_timeout = 1000000000')
+		
 		with self._connection as cursor:
 			cursor.execute('create table if not exists entries(key, value, primary key (key))')
 	
