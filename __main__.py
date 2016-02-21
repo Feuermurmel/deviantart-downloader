@@ -86,7 +86,7 @@ def download_user_images(user : str):
 				image_uri = art_get_image_uri(soup)
 				
 				if image_uri is None:
-					util.log('Error: No image URL found on art page.')
+					util.log('Error: No image URL found on art page {}.', page.uri)
 				else:
 					image_ext = uri_get_ext(image_uri)
 					image_path = os.path.join(dir, file_name + image_ext)
@@ -97,12 +97,12 @@ def download_user_images(user : str):
 					response = session.get(image_uri)
 					
 					if not response.ok:
-						util.log('Error downloading image: {}', response.status_code)
+						util.log('Error downloading image {}: {}', image_uri, response.status_code)
 					else:
 						content_type = response.headers['content-type']
 						
 						if not content_type.startswith('image/'):
-							util.log('Invalid content type for image: {}', content_type)
+							util.log('Invalid content type for image {}: {}', image_uri, content_type)
 						else:
 							with open(temp_path, 'wb') as file:
 								file.write(response.content)
