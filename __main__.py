@@ -1,4 +1,4 @@
-import os, re, urllib.parse, requests, bs4, unidecode
+import sys, os, re, urllib.parse, requests, bs4, unidecode
 from lib import util, caches, spiders
 
 
@@ -109,8 +109,8 @@ def download_user_images(user : str):
 	spider.run()
 
 
-def main():
-	download_user_images('joycall3')
+def main(user):
+	download_user_images(user)
 
 
-main()
+main(*sys.argv[1:])
