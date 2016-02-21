@@ -47,10 +47,10 @@ class Spider:
 			response = self._requester.get(uri)
 			
 			if not response.ok:
-				raise Exception('Error downloading page: {}'.format(response.status_code))
-			
-			soup = bs4.BeautifulSoup(response.text, 'html.parser')
-			
-			util.log('Processing with {}: {}', processor_fn.__name__, uri)
-			
-			processor_fn(Page(uri, soup))
+				util.log('Error downloading page {}: {}', uri, response.status_code)
+			else:
+				soup = bs4.BeautifulSoup(response.text, 'html.parser')
+				
+				util.log('Processing with {}: {}', processor_fn.__name__, uri)
+				
+				processor_fn(Page(uri, soup))

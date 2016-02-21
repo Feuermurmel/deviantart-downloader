@@ -91,7 +91,8 @@ def download_user_images(user : str):
 				response = session.get(page.uri)
 				
 				# This worked when the spider requested the page so it should also work here.
-				assert response.ok
+				if not response.ok:
+					util.log('Error when getting art page {}: {}', page.uri, response.status_code)
 				
 				soup = bs4.BeautifulSoup(response.content, 'html.parser')
 				image_uri = art_get_image_uri(soup)
