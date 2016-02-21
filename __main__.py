@@ -29,10 +29,21 @@ def art_page_get_title(page : spiders.Page):
 def art_get_image_uri(soup : bs4.BeautifulSoup):
 	download_buttons = soup.find_all('a', 'dev-page-download')
 	
-	if len(download_buttons) != 1:
-		return None
+	if len(download_buttons) == 1:
+		return download_buttons[0]['href']
+	else:
+		assert not download_buttons
 	
-	return download_buttons[0]['href']
+	view_divs = soup.find_all('div', 'dev-view-deviation')
+	
+	if len(view_divs) == 1:
+		imgs = view_divs[0].find_all('img')
+		
+		if imgs:
+			# There are two img elements, one for the small version and one for the expanded, when the user clicks on the image.
+			return imgs[-1]['src']
+	else:
+		assert not view_divs
 
 
 def uri_get_ext(uri : str):
