@@ -34,17 +34,18 @@ class Cache:
 	def __init__(self, dict : PersistentDict):
 		self._dict = dict
 	
-	def get(self, key : str, fn : callable, max_age : datetime.timedelta = None):
+	def get(self, key : str, value_fn : callable, *, max_age_by_cached_value_fn : callable = None):
 		now = datetime.datetime.now()
 		result = self._dict.get(key)
 		
 		if result is not None:
 			timestamp, value = result
+			max_age = max_age_by_cached_value_fn(value)
 			
 			if max_age is None or now - timestamp < max_age:
 				return value
 		
-		value = fn()
+		value = value_fn()
 		entry = now, value
 		
 		self._dict.set(key, entry)
