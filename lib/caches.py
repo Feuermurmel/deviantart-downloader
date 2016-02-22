@@ -1,4 +1,4 @@
-import sqlite3, pickle, datetime
+import sqlite3, pickle, datetime, gzip
 
 
 class PersistentDict:
@@ -13,7 +13,7 @@ class PersistentDict:
 	def set(self, key : str, value):
 		with self._connection:
 			cursor = self._connection.cursor()
-			cursor.execute('insert or replace into entries (key, value) values (:key, :value)', dict(key = key, value = pickle.dumps(value)))
+			cursor.execute('insert or replace into entries (key, value) values (:key, :value)', dict(key = key, value = gzip.compress(pickle.dumps(value))))
 	
 	def get(self, key : str, default = None):
 		with self._connection:
@@ -25,7 +25,7 @@ class PersistentDict:
 			if rows:
 				(value,), = rows
 				
-				return pickle.loads(value)
+				return pickle.loads(gzip.decompress(value))
 			else:
 				return default
 				
