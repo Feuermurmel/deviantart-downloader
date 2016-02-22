@@ -1,4 +1,4 @@
-import bs4, requests, urllib.parse
+import bs4, requests, urllib.parse, datetime
 from . import caches, util
 
 
@@ -6,13 +6,19 @@ class Requester:
 	def __init__(self, cache : caches.Cache):
 		self._cache = cache
 	
-	def get(self, uri : str):
-		def fn():
+	def get(self, uri : str, *, success_max_age : datetime.timedelta = None, failure_max_age : datetime.timedelta = None):
+		def value_fn():
 			util.log('Requesting page: {}', uri)
 			
 			return requests.get(uri)
 		
-		return self._cache.get(uri, fn)
+		def max_age_fn(cached_value : requests.Response):
+			if cached_value.ok:
+				return success_max_age
+			else:
+				return failure_max_age
+		
+		return self._cache.get(uri, value_fn, max_age_by_cached_value_fn = max_age_fn)
 
 
 class Page:
@@ -22,6 +28,13 @@ class Page:
 	
 	def resolve_link(self, uri : str):
 		return urllib.parse.urljoin(self.uri, uri)
+
+
+def processor(*, success_max_age : datetime.timedelta = None, failure_max_age : datetime.timedelta = datetime.timedelta(hours = 1)):
+	def decorator(wrapped_fn):
+		return wrapped_fn, success_max_age, failure_max_age
+	
+	return decorator
 
 
 class Spider:
@@ -34,8 +47,8 @@ class Spider:
 		# Element type: (processor_fn, uri : str)
 		self._queue = []
 	
-	def enqueue(self, processor_fn : callable, uri : str):
-		request = processor_fn, uri
+	def enqueue(self, processor, uri : str):
+		request = processor, uri
 		
 		if request not in self._walked_uris:
 			self._walked_uris.add(request)
@@ -43,8 +56,8 @@ class Spider:
 	
 	def run(self):
 		while self._queue:
-			processor_fn, uri = self._queue.pop(0)
-			response = self._requester.get(uri)
+			(processor_fn, success_max_age, failure_max_age), uri = self._queue.pop(0)
+			response = self._requester.get(uri, success_max_age = success_max_age, failure_max_age = failure_max_age)
 			
 			if not response.ok:
 				util.log('Error downloading page {}: {}', uri, response.status_code)

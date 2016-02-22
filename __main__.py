@@ -1,4 +1,4 @@
-import sys, os, re, urllib.parse, requests, bs4, unidecode
+import sys, os, re, urllib.parse, requests, bs4, unidecode, datetime
 from lib import util, caches, spiders
 
 
@@ -61,6 +61,7 @@ def download_user_images(user : str):
 	spider = spiders.Spider(spiders.Requester(caches.Cache(caches.PersistentDict('cache.db'))))
 	domain = '{}.deviantart.com'.format(user)
 	
+	@spiders.processor(success_max_age = datetime.timedelta(days = 1))
 	def process_gallery(page : spiders.Page):
 		for i in iter_uris(page):
 			parts = urllib.parse.urlparse(i)
@@ -76,6 +77,7 @@ def download_user_images(user : str):
 				elif parts.path.startswith('/art/'):
 					spider.enqueue(process_art, i)
 	
+	@spiders.processor()
 	def process_art(page : spiders.Page):
 		dir = os.path.join('download', user)
 		id = art_page_get_id(page)
