@@ -2,7 +2,7 @@ import sys, time, contextlib
 
 
 def log(message, *args):
-	print(message.format(*args), file = sys.stderr)
+	print(message.format(*args), file = sys.stderr, flush = True)
 
 
 @contextlib.contextmanager
