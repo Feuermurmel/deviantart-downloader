@@ -58,7 +58,12 @@ def clean_filename(name):
 
 
 def download_user_images(user : str):
-	spider = spiders.Spider(spiders.Requester(caches.Cache(caches.PersistentDict('cache.db'))))
+	spider = spiders.Spider(
+		spiders.Requester(
+			caches.Cache(
+				caches.PersistentDict(
+					os.path.join(user, 'cache.db')))))
+	
 	domain = '{}.deviantart.com'.format(user)
 	
 	@spiders.processor(success_max_age = datetime.timedelta(days = 1))
