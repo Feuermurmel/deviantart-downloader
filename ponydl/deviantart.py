@@ -1,5 +1,5 @@
 import os, re, urllib.parse, requests, bs4, unidecode, datetime
-from lib import util, caches, spiders
+from ponydl import util, caches, spiders
 
 
 def iter_uris(page : spiders.Page):

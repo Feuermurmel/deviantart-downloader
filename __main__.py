@@ -1,5 +1,5 @@
 import argparse
-from lib import deviantart
+from ponydl import deviantart
 
 
 def parse_args():
