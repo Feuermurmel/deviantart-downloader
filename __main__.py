@@ -79,15 +79,14 @@ def download_user_images(user : str):
 	
 	@spiders.processor()
 	def process_art(page : spiders.Page):
-		dir = os.path.join('download', user)
 		id = art_page_get_id(page)
 		title = art_page_get_title(page)
 		file_name = '{}-{}'.format(id, clean_filename(title))
 		
-		if not os.path.exists(dir):
-			os.makedirs(dir)
+		if not os.path.exists(user):
+			os.makedirs(user)
 		
-		if all(i.endswith('~') or os.path.splitext(i)[0] != file_name for i in os.listdir(dir)):
+		if all(i.endswith('~') or os.path.splitext(i)[0] != file_name for i in os.listdir(user)):
 			with requests.session() as session: 
 				# Request the page here again, inside a session, which is necessary to get a fresh, working URL for the image.
 				response = session.get(page.uri)
@@ -103,7 +102,7 @@ def download_user_images(user : str):
 					util.log('Error: No image URL found on art page {}.', page.uri)
 				else:
 					image_ext = uri_get_ext(image_uri)
-					image_path = os.path.join(dir, file_name + image_ext)
+					image_path = os.path.join(user, file_name + image_ext)
 					temp_path = image_path + '~'
 					
 					util.log('Downloading image: {}', image_path)
