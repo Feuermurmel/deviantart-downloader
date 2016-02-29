@@ -13,5 +13,5 @@ $ python setup.py develop
 ## Usage
 
 ```
-$ python . $ACCOUNT_NAME
+$ ponydl $ACCOUNT_NAME
 ```
