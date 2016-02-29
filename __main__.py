@@ -70,7 +70,7 @@ def download_user_images(user : str):
 				if parts.path == '/gallery/':
 					arguments = urllib.parse.parse_qs(parts.query)
 					
-					if '/' in arguments.get('catpath', []):
+					if { '/', 'scraps' } & set(arguments.get('catpath', [])):
 						if 'sort' not in arguments:
 							if 'coffset' not in arguments:
 								spider.enqueue(process_gallery, i)
