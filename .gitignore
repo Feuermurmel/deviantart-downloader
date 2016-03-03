@@ -1,5 +1,5 @@
 *.pyc
 *.egg-info
 /venv/
-/cache.db
-/download/
+/build/
+/dist/
