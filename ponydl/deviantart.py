@@ -58,6 +58,10 @@ def clean_filename(name):
 
 
 def download_user_images(user : str):
+	# Do this here so that the cache database can be created.
+	if not os.path.exists(user):
+		os.makedirs(user)
+	
 	spider = spiders.Spider(
 		spiders.Requester(
 			caches.Cache(
@@ -87,9 +91,6 @@ def download_user_images(user : str):
 		id = art_page_get_id(page)
 		title = art_page_get_title(page)
 		file_name = '{}-{}'.format(id, clean_filename(title))
-		
-		if not os.path.exists(user):
-			os.makedirs(user)
 		
 		if all(i.endswith('~') or os.path.splitext(i)[0] != file_name for i in os.listdir(user)):
 			with requests.session() as session: 
