@@ -91,8 +91,22 @@ def download_user_images(user: str):
                         if 'sort' not in arguments:
                             if 'coffset' not in arguments:
                                 spider.enqueue(process_gallery, i)
-                elif parts.path.startswith('/art/'):
-                    spider.enqueue(process_art, i)
+
+        feed_elems = page.soup.find_all(
+            'link',
+            attrs=dict(rel='alternate', type='application/rss+xml'))
+
+        for i in feed_elems:
+            spider.enqueue(process_gallery_feed, i['href'])
+
+    @spiders.processor(success_max_age=datetime.timedelta(days=1))
+    def process_gallery_feed(page: spiders.Page):
+        for i in page.soup.find_all('link'):
+            uri = i.get_text()
+            parts = urllib.parse.urlparse(uri)
+
+            if parts.netloc == domain and parts.path.startswith('/art/'):
+                spider.enqueue(process_art, uri)
 
     @spiders.processor()
     def process_art(page: spiders.Page):
