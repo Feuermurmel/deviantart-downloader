@@ -10,7 +10,11 @@ from ponydl import util, caches, spiders
 
 
 def iter_uris(page: spiders.Page):
-    for i in page.soup.find_all('a'):
+    def iter_elements():
+        yield from page.soup.find_all('a')
+        yield from page.soup.find_all('link', attrs=dict(rel='next'))
+
+    for i in iter_elements():
         href = i.get('href')
 
         if href is not None:
