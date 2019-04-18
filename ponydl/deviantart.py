@@ -67,7 +67,19 @@ def extension_for_content_type(content_type):
 
 
 def clean_filename(name):
-    return re.sub('[^A-Za-z0-9]+', '_', unidecode.unidecode(name))
+    # Replace non-ASCII characters with ASCII replacements.
+    name = unidecode.unidecode(name)
+
+    # Replace everything non-alphanumeric (including whitespace) with underscores.
+    name = re.sub('[^A-Za-z0-9]', '_', name)
+
+    # Replace multiple consecutive underscores with a single one.
+    name = re.sub('_+', '_', name)
+
+    # Remove all underscores at the start or end of the string.
+    name = re.sub('^_|_$', '', name)
+
+    return name
 
 
 def get_downloaded_image_ids(dir_path):
