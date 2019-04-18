@@ -70,16 +70,25 @@ def clean_filename(name):
     return re.sub('[^A-Za-z0-9]+', '_', unidecode.unidecode(name))
 
 
+def get_downloaded_image_ids(dir_path):
+    return {
+        i.split('-', 1)[0]
+        for i in  os.listdir(dir_path)
+        if not i.endswith('~')}
+
+
 def download_user_images(user: str):
+    user_dir = user
+
     # Do this here so that the cache database can be created.
-    if not os.path.exists(user):
-        os.makedirs(user)
+    if not os.path.exists(user_dir):
+        os.makedirs(user_dir)
 
     spider = spiders.Spider(
         spiders.Requester(
             caches.Cache(
                 caches.PersistentDict(
-                    os.path.join(user, 'cache.db')))))
+                    os.path.join(user_dir, 'cache.db')))))
 
     domain = 'www.deviantart.com'
     gallery_path = '/{}/gallery/'.format(user)
@@ -105,9 +114,8 @@ def download_user_images(user: str):
     def process_art(page: spiders.Page):
         id = art_page_get_id(page)
         title = art_page_get_title(page)
-        file_name = '{}-{}'.format(id, clean_filename(title))
 
-        if all(i.endswith('~') or os.path.splitext(i)[0] != file_name for i in os.listdir(user)):
+        if id not in get_downloaded_image_ids(user_dir):
             with requests.session() as session:
                 # Request the page here again, inside a session, which is
                 # necessary to get a fresh, working URL for the image.
@@ -137,7 +145,8 @@ def download_user_images(user: str):
                         if image_ext is None:
                             util.log('Error: Unknown content type: {}', content_type)
                         else:
-                            image_path = os.path.join(user, file_name + image_ext)
+                            file_name = '{}-{}.{}'.format(id, clean_filename(title), image_ext)
+                            image_path = os.path.join(user_dir, file_name)
                             temp_path = image_path + '~'
 
                             with open(temp_path, 'wb') as file:
