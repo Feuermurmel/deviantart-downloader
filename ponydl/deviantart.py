@@ -58,11 +58,12 @@ def art_get_image_uri(soup: bs4.BeautifulSoup):
         assert not view_divs
 
 
-def uri_get_ext(uri: str):
-    _, _, path, _, _, _ = urllib.parse.urlparse(uri)
-    _, ext = os.path.splitext(path)
+def extension_for_content_type(content_type):
+    extensions = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg'}
 
-    return ext
+    return extensions.get(content_type)
 
 
 def clean_filename(name):
@@ -113,7 +114,7 @@ def download_user_images(user: str):
                 response = session.get(page.uri)
 
                 # This worked when the spider requested the page so it should
-                #  also work here.
+                # also work here.
                 if not response.ok:
                     util.log('Error when getting art page {}: {}', page.uri, response.status_code)
 
@@ -123,11 +124,7 @@ def download_user_images(user: str):
                 if image_uri is None:
                     util.log('Error: No image URL found on art page {}.', page.uri)
                 else:
-                    image_ext = uri_get_ext(image_uri)
-                    image_path = os.path.join(user, file_name + image_ext)
-                    temp_path = image_path + '~'
-
-                    util.log('Downloading image: {}', image_path)
+                    util.log('Downloading image: {}', title)
 
                     response = session.get(image_uri)
 
@@ -135,10 +132,14 @@ def download_user_images(user: str):
                         util.log('Error downloading image {}: {}', image_uri, response.status_code)
                     else:
                         content_type = response.headers['content-type']
+                        image_ext = extension_for_content_type(content_type)
 
-                        if not content_type.startswith('image/'):
-                            util.log('Invalid content type for image {}: {}', image_uri, content_type)
+                        if image_ext is None:
+                            util.log('Error: Unknown content type: {}', content_type)
                         else:
+                            image_path = os.path.join(user, file_name + image_ext)
+                            temp_path = image_path + '~'
+
                             with open(temp_path, 'wb') as file:
                                 file.write(response.content)
                                 os.fsync(file.fileno())
