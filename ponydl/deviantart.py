@@ -77,18 +77,16 @@ def get_downloaded_image_ids(dir_path):
         if not i.endswith('~')}
 
 
-def download_user_images(user: str):
-    user_dir = user
-
+def download_user_images(user: str, output_dir: str):
     # Do this here so that the cache database can be created.
-    if not os.path.exists(user_dir):
-        os.makedirs(user_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     spider = spiders.Spider(
         spiders.Requester(
             caches.Cache(
                 caches.PersistentDict(
-                    os.path.join(user_dir, 'cache.db')))))
+                    os.path.join(output_dir, 'cache.db')))))
 
     domain = 'www.deviantart.com'
     gallery_path = '/{}/gallery/'.format(user)
@@ -115,7 +113,7 @@ def download_user_images(user: str):
         id = art_page_get_id(page)
         title = art_page_get_title(page)
 
-        if id not in get_downloaded_image_ids(user_dir):
+        if id not in get_downloaded_image_ids(output_dir):
             with requests.session() as session:
                 # Request the page here again, inside a session, which is
                 # necessary to get a fresh, working URL for the image.
@@ -146,7 +144,7 @@ def download_user_images(user: str):
                             util.log('Error: Unknown content type: {}', content_type)
                         else:
                             file_name = '{}-{}.{}'.format(id, clean_filename(title), image_ext)
-                            image_path = os.path.join(user_dir, file_name)
+                            image_path = os.path.join(output_dir, file_name)
                             temp_path = image_path + '~'
 
                             with open(temp_path, 'wb') as file:
