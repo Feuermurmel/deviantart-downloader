@@ -80,7 +80,9 @@ def download_user_images(user: str):
                 caches.PersistentDict(
                     os.path.join(user, 'cache.db')))))
 
-    domain = '{}.deviantart.com'.format(user)
+    domain = 'www.deviantart.com'
+    gallery_path = '/{}/gallery/'.format(user)
+    art_path = '/{}/art/'.format(user)
 
     @spiders.processor(success_max_age=datetime.timedelta(days=1))
     def process_gallery(page: spiders.Page):
@@ -88,14 +90,14 @@ def download_user_images(user: str):
             parts = urllib.parse.urlparse(i)
 
             if parts.netloc == domain:
-                if parts.path == '/gallery/':
+                if parts.path == gallery_path:
                     arguments = urllib.parse.parse_qs(parts.query)
 
                     if {'/', 'scraps'} & set(arguments.get('catpath', [])):
                         if 'sort' not in arguments:
                             if 'coffset' not in arguments:
                                 spider.enqueue(process_gallery, i)
-                elif parts.path.startswith('/art/'):
+                elif parts.path.startswith(art_path):
                     spider.enqueue(process_art, i)
 
     @spiders.processor()
@@ -144,7 +146,7 @@ def download_user_images(user: str):
                             os.rename(temp_path, image_path)
 
     url = urllib.parse.urlunparse(
-        ('http', domain, '/gallery/', None, urllib.parse.urlencode(dict(catpath='/')), None))
+        ('http', domain, gallery_path, None, urllib.parse.urlencode(dict(catpath='/')), None))
 
     spider.enqueue(process_gallery, url)
     spider.run()
